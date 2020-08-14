@@ -1,0 +1,40 @@
+# mutexcache-python
+
+A small utility library for dynamically creating mutexes based on cache keys. 
+
+## Use case
+
+Say you're implementing a graphql server, with object fields which asynchronously resolve independently of each other. 
+Multiple fields perform the same operation, and thus should use a mutex and some basic caching to ensure that the 
+database query happens at most once. If you have an array of these objects, suddenly they're all using the same mutex,
+which can degrade performance. 
+
+Instead of using one mutex to rule them all, dynamically create multiple short-lived mutexes which each object can use 
+independently of other resolving objects. By using the same cache key for the mutexes as you would for your cache check,
+you can almost transparently use dynamically created mutexes without worrying about performance or allocation/deallocation
+of mutexes. 
+
+With mutexcache, if a mutex associated with a cache key is already stored, then it will be returned. Otherwise, a new 
+mutex will silently be created, stored for future use, and returned. 
+
+## Installation
+
+`pip3 install mutexcache`
+
+## Usage
+
+MutexCache.get() returns `threading.Lock` objects.
+
+```python
+from mutexcache import MutexCache
+
+mutex_cache = MutexCache() # optionally, provide a ttl in seconds 
+
+cache_key_a = "key_a"
+cache_key_b = "key_b"
+
+mut_a = mutex_cache.get(cache_key_a)
+mut_b = mutex_cache.get(cache_key_b)
+
+# [...do stuff with your Locks...]
+```
